@@ -31,6 +31,7 @@ int main(int argc, char **argv)
         return 1;
     }   
 
+
     /* Load & verify BPF programs */
     err = trigger_by_exec_bpf__load(skel);
     if (err) {
@@ -54,9 +55,11 @@ int main(int argc, char **argv)
         char *args[2];
         args[0] = "/bin/ls";        // first arg is the full path to the executable
         args[1] = NULL; 
-        if (fork() == 0)
+        if (fork() == 0) {
+            /* my addition: ensure BPF program only handles execve from a child of our process */
+            skel->bss->curr_child_pid = getpid();
             execv(args[0], args); // child: call execv with the path and the args
-        else
+        } else
             wait(&status);
         sleep(1); // remove to get more triggers
     }
