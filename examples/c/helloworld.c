@@ -6,10 +6,6 @@
 #include <bpf/libbpf.h>
 #include "helloworld.skel.h"
 
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-
 static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va_list args)
 {
     return vfprintf(stderr, format, args);
@@ -55,16 +51,6 @@ int main(int argc, char **argv)
         /* trigger our BPF program */
         fprintf(stderr, ".");
         sleep(1);
-
-        
-        // int status;
-        // char *args[2];
-        // args[0] = "/bin/ls";        // first arg is the full path to the executable
-        // args[1] = NULL; 
-        // if ( fork() == 0 )
-        //     execv( args[0], args ); // child: call execv with the path and the args
-        // else
-        //     wait( &status );
     }
 
 cleanup:
