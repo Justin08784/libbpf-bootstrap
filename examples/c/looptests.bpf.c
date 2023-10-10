@@ -95,11 +95,12 @@ int bpf_prog(void *ctx)
             }
             break;
         }
-        case CUSTOM4:
+        case CUSTOM4: {
             /* An infinite loop with an empty body. 
             Fails as expected */
             for (;;) {}
             break;
+        }
     }
 
     return 0;
