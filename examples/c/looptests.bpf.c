@@ -14,9 +14,11 @@ enum LOOP_TYPE {
     CUSTOM1,
     CUSTOM2,
     CUSTOM3, 
-    CUSTOM4
+    CUSTOM4,
+    CUSTOM5,
+    CUSTOM6
 };
-const static int test_type = CUSTOM4; 
+const static int test_type = CUSTOM6; 
 
 /*
 Interestingly, an error is thrown is test_type is not static. 
@@ -100,6 +102,24 @@ int bpf_prog(void *ctx)
             Fails as expected */
             for (;;) {}
             break;
+        }
+        case CUSTOM5: {
+            //C1: Loop will not execute due to floating-point errors
+            double x = 0.1;
+            double y = ((x + 1) * (x + 1) - x * x - 1) / 2;
+            if (x == y) { 
+                for (;;) {}
+            } 
+            break;
+        }
+        case CUSTOM6: {
+            //C2: Loop will  execute
+            double x = 0.1;
+            double y = ((x + 1) * (x + 1) - x * x - 1) / 2;
+            if (x != y) { 
+                for (;;) {}
+            }
+
         }
     }
 
