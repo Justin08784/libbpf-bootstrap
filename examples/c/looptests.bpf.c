@@ -119,7 +119,7 @@ int bpf_prog(void *ctx)
             if (x != y) { 
                 for (;;) {}
             }
-
+            break;
         }
     }
 
