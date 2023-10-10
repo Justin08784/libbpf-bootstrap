@@ -96,8 +96,8 @@ int bpf_prog(void *ctx)
             break;
         }
         case CUSTOM4:
-            /* An infinite loop with an empty body. This executes without problem,
-            strangely. */
+            /* An infinite loop with an empty body. 
+            Fails as expected */
             for (;;) {}
             break;
     }
