@@ -16,9 +16,12 @@ enum LOOP_TYPE {
     CUSTOM3, 
     CUSTOM4,
     CUSTOM5,
-    CUSTOM6
+    CUSTOM6,
+    CUSTOM7,
+    CUSTOM8,
+    CUSTOM9
 };
-const static int test_type = CUSTOM6; 
+const static int test_type = CUSTOM9; 
 
 /*
 Interestingly, an error is thrown is test_type is not static. 
@@ -121,6 +124,54 @@ int bpf_prog(void *ctx)
             }
             break;
         }
+        case CUSTOM7: {
+            // deadcode
+            if (0) {
+                int x = 2;
+                bpf_printk("This print should not execute. %d\n", x);
+
+                for (;;) {}
+            }
+
+
+            bpf_printk("invoke bpf_prog: %s\n", msg);
+            break;
+        }
+
+        case CUSTOM8: {
+            // nested loops
+            int nest_factor = 2;
+
+            for (int i1 = 0; i1 < nest_factor; ++i1)
+                for (int i2 = 0; i2 < nest_factor; ++i2)
+                    for (int i3 = 0; i3 < nest_factor; ++i3)
+                        for (int i4 = 0; i4 < nest_factor; ++i4)
+                            for (int i5 = 0; i5 < nest_factor; ++i5) 
+                                bpf_printk("Hi\n");
+            break;
+        }
+
+        case CUSTOM9: {
+            // An infinite print of an ascending value
+            /*
+            The verifier does not immediately detect the infinite loop,
+            for some reason?
+
+            It runs for 10 seconds before printing:
+
+            BPF program is too large. Processed 1000001 insn
+            processed 1000001 insns (limit 1000000) max_states_per_insn 4 total_states 16668 peak_states 16668 mark_read 1
+            -- END PROG LOAD LOG --
+            libbpf: prog 'bpf_prog': failed to load: -7
+            libbpf: failed to load object 'looptests_bpf'
+            libbpf: failed to load BPF skeleton 'looptes
+            */
+
+            for (int i = 0; ; ++i) 
+                bpf_printk("%d\n", i);
+            break;
+        }
+
     }
 
     return 0;
