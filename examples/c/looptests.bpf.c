@@ -169,6 +169,10 @@ int bpf_prog(void *ctx)
 
             for (int i = 0; ; ++i) 
                 bpf_printk("%d\n", i);
+
+            /* the result is equivalent for... */
+            // for (int i = 0; ; ++i)
+            //     bpf_printk("Hi\n", i);
             break;
         }
 
