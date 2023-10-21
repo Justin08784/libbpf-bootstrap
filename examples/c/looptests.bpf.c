@@ -21,9 +21,11 @@ enum LOOP_TYPE {
     CUSTOM8,
     CUSTOM9,
     CUSTOM10,
-    CUSTOM11
+    CUSTOM11,
+    CUSTOM12
 };
-const static int test_type = CUSTOM11; 
+const static int test_type = CUSTOM12; 
+int global_var = 0;
 
 /*
 Interestingly, an error is thrown is test_type is not static. 
@@ -53,6 +55,8 @@ int bpf_prog(void *ctx)
 	if (pid != my_pid)
         /* ignore writes not from a running looptests.c */
 		return 0;
+    
+    bpf_printk("ya: %s\n", test_type);
 
     char msg[] = "Hello, World!";
 
@@ -209,6 +213,24 @@ int bpf_prog(void *ctx)
                 for (;;)
                     bpf_printk("invoke bpf_prog: %s\n", msg);
             }
+
+        }
+
+        case CUSTOM12: {
+            /*
+            ebpf verifier is smart enough to propagate/infer the results of
+            certain operations, even if the operands are global variables
+            that are not fixed
+            */
+
+            global_var &= 0; // doing this will pass
+            // global_var ^= global_var; // doing this instead will still pass
+            // global_var &= 1; // doing this instead will fail
+            if (global_var) {
+                for (;;)
+                    bpf_printk("invoke bpf_prog: %s\n", msg);
+            }
+            return 0;
 
         }
 

@@ -29,6 +29,7 @@ int main(int argc, char **argv)
 
     /* my addition: ensure BPF program only handles write() syscalls from our process */
     skel->bss->my_pid = getpid();
+    skel->bss->global_var = 0;
 
     /* Load & verify BPF programs */
     err = looptests_bpf__load(skel);
