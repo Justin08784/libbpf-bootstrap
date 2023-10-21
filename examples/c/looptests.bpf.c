@@ -19,9 +19,11 @@ enum LOOP_TYPE {
     CUSTOM6,
     CUSTOM7,
     CUSTOM8,
-    CUSTOM9
+    CUSTOM9,
+    CUSTOM10,
+    CUSTOM11
 };
-const static int test_type = CUSTOM9; 
+const static int test_type = CUSTOM11; 
 
 /*
 Interestingly, an error is thrown is test_type is not static. 
@@ -174,6 +176,40 @@ int bpf_prog(void *ctx)
             // for (int i = 0; ; ++i)
             //     bpf_printk("Hi\n", i);
             break;
+        }
+
+        case CUSTOM10: {
+            /*
+            A for loop with 10^6.
+            Expectation: fail because ebpf programs have a 10k insn limit?
+            */
+
+            for (int i = 0; i < 100000; ++i) 
+                bpf_printk("%d\n", i);
+
+            break;
+        }
+
+        case CUSTOM11: {
+            /*
+            Arithmetic condition on infinite loop hidden behind the result
+            of a for loop.
+
+            Expectation: fail
+            */
+
+            int sum = 0;
+            for (int i = 0; i < 3; i++) {
+                sum += i;
+            }
+            if (sum > 2) {
+                break;
+            } else {
+                // should never execute
+                for (;;)
+                    bpf_printk("invoke bpf_prog: %s\n", msg);
+            }
+
         }
 
     }
