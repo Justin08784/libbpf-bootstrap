@@ -22,9 +22,11 @@ enum LOOP_TYPE {
     CUSTOM9,
     CUSTOM10,
     CUSTOM11,
-    CUSTOM12
+    CUSTOM12,
+    CUSTOM13,
+    CUSTOM14
 };
-const static int test_type = CUSTOM12; 
+const static int test_type = CUSTOM14; 
 int global_var = 0;
 
 /*
@@ -63,19 +65,19 @@ int bpf_prog(void *ctx)
     switch (test_type) {
         case NO_LOOP: {
             /* should pass */
-            bpf_printk("invoke bpf_prog: %s\n", msg);
+            bpf_printk("1invoke bpf_prog: %s\n", msg);
             return 0;
         }
         case BOUNDED_LOOP: {
             /* should pass */
             for (int i = 0; i < 4; i++)
-                bpf_printk("invoke bpf_prog: %s\n", msg);
+                bpf_printk("2invoke bpf_prog: %s\n", msg);
             return 0;
         }
         case INFINITE_LOOP: {
             /* should fail */
             for (;;)
-                bpf_printk("invoke bpf_prog: %s\n", msg);
+                bpf_printk("3invoke bpf_prog: %s\n", msg);
             return 0;
         }
         case CUSTOM1: {
@@ -230,6 +232,60 @@ int bpf_prog(void *ctx)
                 for (;;)
                     bpf_printk("invoke bpf_prog: %s\n", msg);
             }
+            return 0;
+
+        }
+
+        case CUSTOM13: {
+            /*
+            A loop with a +3 increment.
+            Expectation: fail; how would the verifier predict how many iterations
+            the loop has?
+            */
+
+            // with a 10^6 limit: instant pass
+            // for (int i = 0; i < 100000; i += 3)
+            //     bpf_printk("%d\n", i);
+
+            // with a 10^7 limit: delayed/simulated fail
+            for (int i = 0; i < 1000000; i += 3)
+                bpf_printk("%d\n", i);
+
+            return 0;
+
+        }
+
+        case CUSTOM14: {
+            /*
+            A loop with a fibonacci incrementor, ooooh!
+            Expectation: fail; how would the verifier predict how many iterations
+            the loop has?
+            */
+
+            int f1 = 0;
+            int f2 = 1;
+            int tmp = f2;
+            
+            
+            // for (; f2 < 1000000; tmp = f2, f2 = f1 + f2, f1 = tmp)
+                /* for this many loop iterations, the verifier passes it instantly.
+                This means it can pre-compute (statically) or simulate (dynamically)
+                the fibonacci values. */
+            
+            for (; f2 < 2147483554 ; tmp = f2, f2 = f1 + f2, f1 = tmp)
+                /*
+                This is the lowest loop limit for which the for loop fails, after a while
+                (yes, it does the whole simulation thing).
+
+                The limit is 93 less than INT_MAX. Hence, the actual problem here is probably
+                f2–– due to its type–– being unable to reach the loop limit value.
+
+                Furthermore, fibonacci grows so quickly that we don't even get close
+                to 10k insns in simulation.
+                */
+            
+                bpf_printk("%d\n", f2);
+
             return 0;
 
         }
